@@ -2,9 +2,14 @@
 
 import * as THREE from 'three';
 import { DeviceOrientationControls } from './DeviceOrientationControls.js';
+import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js'
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js'
 import { FontLoader } from 'three/examples/jsm/loaders/FontLoader';
 
+window.isMobile = function(){
+  	const regex = /Mobi|Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
+  	return regex.test(navigator.userAgent);
+};
 
 //let isSafari = (window.navigator.userAgent.indexOf("Firefox") > -1) || (window.navigator.userAgent.indexOf("Chrome") > -1);
 let ua = window.navigator.userAgent;
@@ -42,23 +47,31 @@ if (!isSafari) {
 
 	let controls = null;
 
+	if(window.isMobile()){
+		controls = new DeviceOrientationControls(camera);
+	}else{
+		controls = new PointerLockControls(camera, renderer.domElement);
+		controls.minPolarAngle = Math.PI / 10;
+		controls.maxPolarAngle = Math.PI;
+		console.log("not mobile");
+	}
+
 
 	//NOTE: LOADER
 
+	// let audioListener = new THREE.AudioListener();
+	// camera.add(audioListener);
 
-	let audioListener = new THREE.AudioListener();
-	camera.add(audioListener);
+	// let music = new THREE.Audio(audioListener);
 
-	let music = new THREE.Audio(audioListener);
+	// let audioLoader = new THREE.AudioLoader();
+	// audioLoader.load("./music/sittin_on_the_dock_of_the_bay.opus", function(buffer) {
 
-	let audioLoader = new THREE.AudioLoader();
-	audioLoader.load("./music/sittin_on_the_dock_of_the_bay.opus", function(buffer) {
+	// 	music.setBuffer(buffer);
+	// 	music.setLoop(true);
+	// 	music.setVolume(.5);
 
-		music.setBuffer(buffer);
-		music.setLoop(true);
-		music.setVolume(.5);
-
-	});
+	// });
 
 
 	let loadScene = new THREE.Scene();
@@ -71,93 +84,99 @@ if (!isSafari) {
 
 	let loadTextMesh = null;
 
-	fontLoader.load("rec/optimer_bold.typeface.json", function(font) {
+	// fontLoader.load("rec/optimer_bold.typeface.json", function(font) {
 
-		loadFont = font;
+	// 	loadFont = font;
 
-		console.log(font);
+	// 	console.log(font);
 
-		let loadTextGeometry = new TextGeometry("Loading Frames...", { font: loadFont, size: 1, depth: 0 });
-		loadTextGeometry.computeBoundingBox();
-		let centerOffset = - 0.5 * (loadTextGeometry.boundingBox.max.x - loadTextGeometry.boundingBox.min.x);
-
-
-		loadTextMesh = new THREE.Mesh(loadTextGeometry, textMaterial);
+	// 	let loadTextGeometry = new TextGeometry("Loading Frames...", { font: loadFont, size: 1, depth: 0 });
+	// 	loadTextGeometry.computeBoundingBox();
+	// 	let centerOffset = - 0.5 * (loadTextGeometry.boundingBox.max.x - loadTextGeometry.boundingBox.min.x);
 
 
-		loadTextMesh.position.x = centerOffset;
-		loadTextMesh.position.z = -10;
-		loadTextMesh.rotation.y = Math.PI * 2;
+	// 	loadTextMesh = new THREE.Mesh(loadTextGeometry, textMaterial);
 
 
-		let frameText = new TextGeometry(loadedFrames + "/" + frameCount, { font: loadFont, size: 1, depth: 0 });
-		frameText.computeBoundingBox();
-		let frameCenterOffset = - 0.5 * (frameText.boundingBox.max.x - frameText.boundingBox.min.x);
-		loadedFramesText = new THREE.Mesh(frameText, textMaterial);
-
-		loadedFramesText.position.x = frameCenterOffset;
-		loadedFramesText.position.y = -2;
-		loadedFramesText.position.z = -10;
-		loadedFramesText.rotation.y = Math.PI * 2;
+	// 	loadTextMesh.position.x = centerOffset;
+	// 	loadTextMesh.position.z = -10;
+	// 	loadTextMesh.rotation.y = Math.PI * 2;
 
 
+	// 	let frameText = new TextGeometry(loadedFrames + "/" + frameCount, { font: loadFont, size: 1, depth: 0 });
+	// 	frameText.computeBoundingBox();
+	// 	let frameCenterOffset = - 0.5 * (frameText.boundingBox.max.x - frameText.boundingBox.min.x);
+	// 	loadedFramesText = new THREE.Mesh(frameText, textMaterial);
 
-		loadScene.add(loadTextMesh);
-		loadScene.add(loadedFramesText);
-
-	});
+	// 	loadedFramesText.position.x = frameCenterOffset;
+	// 	loadedFramesText.position.y = -2;
+	// 	loadedFramesText.position.z = -10;
+	// 	loadedFramesText.rotation.y = Math.PI * 2;
 
 
 
-	let geometry = new THREE.BoxGeometry(1, 1, 1);
-	let material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-	let cube = new THREE.Mesh(geometry, material);
-	cube.position.z = -10;
+	// 	loadScene.add(loadTextMesh);
+	// 	loadScene.add(loadedFramesText);
 
-
-	//let controls = new PointerLockControls(camera, renderer.domElement);
-	//controls.minPolarAngle = Math.PI / 10;
-	//controls.maxPolarAngle = Math.PI;
+	// });
 
 
 
-	let environmentFrames = [];
-	for (let i = 0; i < frameCount; i++) {
-
-		let currentFrame = (i + 1).toString();
-
-		if (currentFrame.length == 1) {
-			currentFrame = "000" + currentFrame;
-		} else if (currentFrame.length == 2) {
-			currentFrame = "00" + currentFrame;
-		} else if (currentFrame.length == 3) {
-			currentFrame = "0" + currentFrame;
-		}
-
-		let currentEnvironment = new THREE.CubeTextureLoader()
-			.setPath("./imgs/")
-			.load([
-				currentFrame + '.left.jpg',
-				currentFrame + '.right.jpg',
-				currentFrame + '.top.jpg',
-				currentFrame + '.bottom.jpg',
-				currentFrame + '.back.jpg',
-				currentFrame + '.front.jpg',
-
-			], function(texture) {
-
-				renderer.initTexture(texture);
-				loadedFrames++;
-
-			});
+	// let geometry = new THREE.BoxGeometry(1, 1, 1);
+	// let material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+	// let cube = new THREE.Mesh(geometry, material);
+	// cube.position.z = -10;
 
 
-		environmentFrames.push(currentEnvironment);
+	// let controls = new PointerLockControls(camera, renderer.domElement);
+	// controls.minPolarAngle = Math.PI / 10;
+	// controls.maxPolarAngle = Math.PI;
 
-	}
 
 
-	scene.background = environmentFrames[0];
+	// let environmentFrames = [];
+	// for (let i = 0; i < frameCount; i++) {
+
+	// 	let currentFrame = (i + 1).toString();
+
+	// 	if (currentFrame.length == 1) {
+	// 		currentFrame = "000" + currentFrame;
+	// 	} else if (currentFrame.length == 2) {
+	// 		currentFrame = "00" + currentFrame;
+	// 	} else if (currentFrame.length == 3) {
+	// 		currentFrame = "0" + currentFrame;
+	// 	}
+
+	// 	let currentEnvironment = new THREE.CubeTextureLoader()
+	// 		.setPath("./imgs/")
+	// 		.load([
+	// 			currentFrame + '.left.jpg',
+	// 			currentFrame + '.right.jpg',
+	// 			currentFrame + '.top.jpg',
+	// 			currentFrame + '.bottom.jpg',
+	// 			currentFrame + '.back.jpg',
+	// 			currentFrame + '.front.jpg',
+
+	// 		], function(texture) {
+
+	// 			renderer.initTexture(texture);
+	// 			loadedFrames++;
+
+	// 		});
+
+
+	// 	environmentFrames.push(currentEnvironment);
+
+	// }
+	const sphere = new THREE.SphereGeometry( 500, 60, 40 );
+	// invert the geometry on the x-axis so that all of the faces point inward
+	sphere.scale( - 1, 1, 1 );
+	let environment = new THREE.TextureLoader().setPath("./imgs/")
+		.load("streetview_yfxrUch2iit26cludIJumw_high.jpg");
+	const material = new THREE.MeshBasicMaterial( { map: environment } );
+	const mesh = new THREE.Mesh( sphere, material );
+	scene.add( mesh );
+	// scene.background = environment;
 
 
 
@@ -167,33 +186,35 @@ if (!isSafari) {
 	let canvas = document.getElementById("canvas");
 	window.addEventListener("mousedown", function(e) {
 		console.log(e);
-		if (loadedFrames === frameCount) {
+		// if (loadedFrames === frameCount) {
 
-			if (!playing) {
-				camera.rotation.y = Math.PI;
-				playing = true;
-				music.play();
-				soundIcon.classList.add("display");
-				controls = new DeviceOrientationControls(camera);
-			}
+		// 	if (!playing) {
+		// 		camera.rotation.y = Math.PI;
+		// 		playing = true;
+		// 		music.play();
+		// 		soundIcon.classList.add("display");
+		// 		controls = new DeviceOrientationControls(camera);
+		// 	}
 
 
 			if (e.target === canvas) {
-				//controls.lock();
+				controls.lock();
 			}
-		}
+		// }
 	});
 
 	window.addEventListener("mouseup", function() {
-		//controls.unlock();
+		if(!window.isMobile()){
+			controls.unlock();
+		}
 	});
 
 	window.addEventListener("touchstart", function() {
-		//controls.lock();
+		// controls.lock();
 	});
 
 	window.addEventListener("touchend", function() {
-		//controls.unlock();
+		// controls.unlock();
 
 	});
 
@@ -246,63 +267,64 @@ if (!isSafari) {
 		let deltaTime = time - lastFrameTime;
 		lastFrameTime = time;
 
-		if (controls !== null) {
+		if (window.isMobile()) {
 			controls.update();
 		}
 
-		if (playing) {
+		// if (playing) {
 
-			currentFrameTime += deltaTime;
-			if (currentFrameTime >= frameTime) {
-				currentFrame++;
-				currentFrameTime = 0;
-				if (currentFrame >= frameCount) {
-					currentFrame = 0;
-				}
-			}
-
-
-			scene.background = environmentFrames[currentFrame];
-
-			cube.rotation.x += 0.01;
-			cube.rotation.y += 0.01;
-			renderer.render(scene, camera);
-
-			cube.position.z = Math.sin(time / 1000) * 10;
-			cube.position.x = Math.cos(time / 1000) * 10;
-
-		} else {
-
-			if (lastLoadedFrames !== loadedFrames && loadFont !== null) {
-
-				let frameText = null;
-
-				if (loadedFrames === frameCount) {
-					loadScene.remove(loadTextMesh);
-					frameText = new TextGeometry("Click To Play", { font: loadFont, size: 1, depth: 0 });
-				} else {
-					frameText = new TextGeometry(loadedFrames + "/" + frameCount, { font: loadFont, size: 1, depth: 0 });
-				}
+		// 	currentFrameTime += deltaTime;
+		// 	if (currentFrameTime >= frameTime) {
+		// 		currentFrame++;
+		// 		currentFrameTime = 0;
+		// 		if (currentFrame >= frameCount) {
+		// 			currentFrame = 0;
+		// 		}
+		// 	}
 
 
-				frameText.computeBoundingBox();
-				let frameCenterOffset = - 0.5 * (frameText.boundingBox.max.x - frameText.boundingBox.min.x);
-				//loadedFramesText = new THREE.Mesh(frameText, textMaterial);
-				loadedFramesText.geometry = frameText;
+		// 	scene.background = environmentFrames[currentFrame];
 
-				loadedFramesText.position.x = frameCenterOffset;
-				loadedFramesText.position.y = -2;
-				loadedFramesText.position.z = -10;
-				loadedFramesText.rotation.y = Math.PI * 2;
+		// 	cube.rotation.x += 0.01;
+		// 	cube.rotation.y += 0.01;
+		// 	renderer.render(scene, camera);
 
-			}
+		// 	cube.position.z = Math.sin(time / 1000) * 10;
+		// 	cube.position.x = Math.cos(time / 1000) * 10;
+
+		// } else {
+
+		// 	if (lastLoadedFrames !== loadedFrames && loadFont !== null) {
+
+		// 		let frameText = null;
+
+		// 		if (loadedFrames === frameCount) {
+		// 			loadScene.remove(loadTextMesh);
+		// 			frameText = new TextGeometry("Click To Play", { font: loadFont, size: 1, depth: 0 });
+		// 		} else {
+		// 			frameText = new TextGeometry(loadedFrames + "/" + frameCount, { font: loadFont, size: 1, depth: 0 });
+		// 		}
+
+
+		// 		frameText.computeBoundingBox();
+		// 		let frameCenterOffset = - 0.5 * (frameText.boundingBox.max.x - frameText.boundingBox.min.x);
+		// 		//loadedFramesText = new THREE.Mesh(frameText, textMaterial);
+		// 		loadedFramesText.geometry = frameText;
+
+		// 		loadedFramesText.position.x = frameCenterOffset;
+		// 		loadedFramesText.position.y = -2;
+		// 		loadedFramesText.position.z = -10;
+		// 		loadedFramesText.rotation.y = Math.PI * 2;
+
+		// 	}
 
 
 
-			renderer.render(loadScene, camera);
+		// 	renderer.render(loadScene, camera);
 
-		}
+		// }
 
+		renderer.render(scene, camera);
 		requestAnimationFrame(animate);
 	}
 
