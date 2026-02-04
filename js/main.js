@@ -172,7 +172,7 @@ if (!isSafari) {
 	// invert the geometry on the x-axis so that all of the faces point inward
 	sphere.scale( - 1, 1, 1 );
 	let environment = new THREE.TextureLoader().setPath("./imgs/")
-		.load("streetview_yfxrUch2iit26cludIJumw_high.jpg");
+		.load("env.png");
 	const material = new THREE.MeshBasicMaterial( { map: environment } );
 	const mesh = new THREE.Mesh( sphere, material );
 	scene.add( mesh );
