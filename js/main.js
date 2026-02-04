@@ -40,6 +40,9 @@ if (!isSafari) {
 	renderer.setSize(window.innerWidth, window.innerHeight);
 	document.body.appendChild(renderer.domElement);
 	renderer.domElement.id = "canvas";
+    renderer.outputEncoding = THREE.sRGBEncoding;
+
+
 
 	let frameCount = 30;
 	let loadedFrames = 0;
@@ -172,7 +175,10 @@ if (!isSafari) {
 	// invert the geometry on the x-axis so that all of the faces point inward
 	sphere.scale( - 1, 1, 1 );
 	let environment = new THREE.TextureLoader().setPath("./imgs/")
-		.load("env.png");
+		.load("env.png", function(texture){
+			texture.colorSpace = THREE.SRGBColorSpace;
+
+		});
 	const material = new THREE.MeshBasicMaterial( { map: environment } );
 	const mesh = new THREE.Mesh( sphere, material );
 	scene.add( mesh );
